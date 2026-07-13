@@ -1,0 +1,68 @@
+﻿<div class="page">
+  <header class="hero">
+    <div class="hero-glow" aria-hidden="true"></div>
+    <h1 class="hero-title">Snip</h1>
+    <p class="hero-sub">Turn any URL into a short link, instantly.</p>
+  </header>
+
+  <section class="input-section">
+    <form class="shorten-form" (ngSubmit)="submit()">
+      <div class="input-pill">
+        <input
+          type="url"
+          name="url"
+          [(ngModel)]="urlInput"
+          placeholder="Paste a URL to shorten&hellip;"
+          required
+          autocomplete="off"
+        />
+        <button type="submit" [disabled]="loading()">
+          {{ loading() ? 'Shortening\u2026' : 'Shorten' }}
+        </button>
+      </div>
+    </form>
+
+    @if (error()) {
+      <p class="inline-error">{{ error() }}</p>
+    }
+
+    @if (lastLink()) {
+      <div class="result-card">
+        <span class="result-label">Your short link</span>
+        <a [href]="lastLink()!.shortUrl" target="_blank" rel="noopener" class="result-link">
+          {{ lastLink()!.shortUrl }}
+        </a>
+      </div>
+    }
+  </section>
+
+  @if (links().length > 0) {
+    <section class="links-card">
+      <h2 class="card-title">All links</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Original URL</th>
+            <th>Hits</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (link of links(); track link.code) {
+            <tr>
+              <td>
+                <a [href]="link.shortUrl" target="_blank" rel="noopener" class="code-link">
+                  {{ link.code }}
+                </a>
+              </td>
+              <td class="url-cell" [title]="link.url">{{ link.url }}</td>
+              <td class="hits">{{ link.hits }}</td>
+              <td class="date">{{ link.createdAt.slice(0, 10) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
+</div>
