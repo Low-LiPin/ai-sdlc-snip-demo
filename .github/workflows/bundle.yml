@@ -1,0 +1,51 @@
+# .github/workflows/bundle.yml
+#
+# Rebuilds the `bundle` submodule from the three source layers and pushes it.
+#
+# Why NO push: trigger?
+#   This file lives only on the `main` branch.  A push: trigger would only fire
+#   when *this file itself* is updated on main — it would never catch commits on
+#   the backend, frontend, or cli branches because those branches don't carry
+#   this workflow file.  The hourly schedule + workflow_dispatch covers those.
+
+name: Build bundle
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # every hour at :00
+  workflow_dispatch:
+
+permissions:
+  contents: write          # needed to push bundle branch + bump main pointers
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main with submodules
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          submodules: true
+          fetch-depth: 0          # full history so submodule pushes work
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Configure git identity and credentials
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name  "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          # Allow submodule git operations to authenticate with the same token
+          git config --global \
+            "url.https://x-access-token:${TOKEN}@github.com/.insteadOf" \
+            "https://github.com/"
+
+      - name: Build and push bundle
+        run: node scripts/build-bundle.mjs --push
