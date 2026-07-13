@@ -7,10 +7,11 @@ submodule pinned to that branch.
 ## Layout
 
 ```
-main  (superproject — this README + .gitmodules)
+main  (superproject — this README + .gitmodules + scripts/)
 ├── backend/   ← branch: backend   Bun 1.x server · zero npm deps · in-memory Map
 ├── frontend/  ← branch: frontend  Angular 19 · standalone components · signals
-└── cli/       ← branch: cli       Node ≥18 · CommonJS · zero npm deps
+├── cli/       ← branch: cli       Node ≥18 · CommonJS · zero npm deps
+└── bundle/    ← branch: bundle    GENERATED release: server + UI + CLI combined
 ```
 
 ## API contract
@@ -106,3 +107,26 @@ git push
 
 Without step 2, the superproject still pins the old commit even though the branch
 moved forward. The submodule pointer is what the Docker / CI release pipeline watches.
+
+## Bundle (generated release)
+
+The `bundle` branch is **generated output** produced by `scripts/build-bundle.mjs`.
+Do not hand-edit any file there except `bundle/README.md`.
+
+| File | Source |
+|---|---|
+| `server.js` | Copied verbatim from `backend/server.js` |
+| `cli.js` | Copied verbatim from `cli/cli.js` |
+| `public/` | Angular production build (`frontend/dist/snip-frontend/browser/`) |
+| `.env` | `PUBLIC_DIR=./public` — Bun auto-loads; switches server to full-stack mode |
+| `package.json` | `start: "bun server.js"` · no `"type"` field (cli.js needs plain `node`) |
+| `Dockerfile` | `oven/bun:1-alpine` · Railway-ready |
+
+To regenerate and publish:
+
+```sh
+node scripts/build-bundle.mjs           # build & commit locally (dry run)
+node scripts/build-bundle.mjs --push    # build, commit, and push bundle + main
+```
+
+The script is idempotent: rerunning when nothing changed produces no new commits.
