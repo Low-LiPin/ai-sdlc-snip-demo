@@ -1,0 +1,12 @@
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/Low-LiPin/ai-sdlc-snip-demo.git
+	branch = frontend
+[submodule "cli"]
+	path = cli
+	url = https://github.com/Low-LiPin/ai-sdlc-snip-demo.git
+	branch = cli
+[submodule "backend"]
+	path = backend
+	url = https://github.com/Low-LiPin/ai-sdlc-snip-demo.git
+	branch = backend
